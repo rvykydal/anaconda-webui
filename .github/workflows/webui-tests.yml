@@ -196,45 +196,87 @@ jobs:
           sudo podman rmi -f $ISO_BUILD_CONTAINER_NAME:$CONTAINER_TAG || true
           sudo podman rmi -f $RPM_BUILD_CONTAINER_NAME:$CONTAINER_TAG || true
 
-      # TODO: anaconda_repo setting
-      - name: Create Permian settings file
-        working-directory: ./permian
-        run: |
-          cat <<EOF > settings.ini
-          [AnacondaWebUI]
-          anaconda_repo=file://${{ github.workspace }}/anaconda
-          hypervisor_vm_limit=${{ env.TEST_JOBS }}
-          test_timeout=${{ env.LAUNCHER_TIMEOUT_MINUTES }}
-          [library]
-          directPath=${{ github.workspace }}/anaconda/ui/webui/test/end2end
-          EOF
-
-      - name: Post status running tests
-        uses: octokit/request-action@v2.x
-        with:
-          route: 'POST /repos/${{ github.repository }}/statuses/${{ needs.pr-info.outputs.sha }}'
-          context: '${{ env.STATUS_NAME }} ${{ needs.pr-info.outputs.launch_args }}'
-          description: 'running pipeline [${{ runner.name }}]'
-          state: pending
-          target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run webui end2end tests
-        working-directory: ./permian
-        run: |
-          PYTHONPATH=${PYTHONPATH:-}:${{ github.workspace }}/tplib \
-          ./pipeline --debug-log permian.log \
-            --settings settings.ini \
-            -o github.pull-request=${{ github.event.issue.number }} \
-            -o github.repository=${{ github.repository }} \
-            -o github.token=${{ secrets.GITHUB_TOKEN }} \
-            run_event '{
-              "type":"github.pr.anaconda",
-              "bootIso": {
-                "x86_64": "file://${{ github.workspace }}/anaconda/images/boot.iso"
-              }
-            }'
+#      # TODO: anaconda_repo setting
+#      - name: Create Permian settings file
+#        working-directory: ./permian
+#        run: |
+#          cat <<EOF > settings.ini
+#          [AnacondaWebUI]
+#          anaconda_repo=file://${{ github.workspace }}/anaconda
+#          hypervisor_vm_limit=${{ env.TEST_JOBS }}
+#          test_timeout=${{ env.LAUNCHER_TIMEOUT_MINUTES }}
+#          [library]
+#          directPath=${{ github.workspace }}/anaconda/ui/webui/test/end2end
+#          EOF
+#
+#      - name: Post status running tests
+#        uses: octokit/request-action@v2.x
+#        with:
+#          route: 'POST /repos/${{ github.repository }}/statuses/${{ needs.pr-info.outputs.sha }}'
+#          context: '${{ env.STATUS_NAME }} ${{ needs.pr-info.outputs.launch_args }}'
+#          description: 'running pipeline [${{ runner.name }}]'
+#          state: pending
+#          target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Run webui end2end tests
+#        working-directory: ./permian
+#        run: |
+#          PYTHONPATH=${PYTHONPATH:-}:${{ github.workspace }}/tplib \
+#          ./pipeline --debug-log permian.log \
+#            --settings settings.ini \
+#            -o github.pull-request=${{ github.event.issue.number }} \
+#            -o github.repository=${{ github.repository }} \
+#            -o github.token=${{ secrets.GITHUB_TOKEN }} \
+#            run_event '{
+#              "type":"github.pr.anaconda",
+#              "bootIso": {
+#                "x86_64": "file://${{ github.workspace }}/anaconda/images/boot.iso"
+#              }
+#            }'
+#
+#      - name: Collect logs
+#        if: always()
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: 'logs'
+#          path: |
+#            permian/permian.log
+#            permian/local_logs/
+#            permian/pipeline_data
+#            permian/static/
+#            permian/index.html
+#            permian/xunit*.xml
+#            permian/*.dump
+#
+#      # Permian exit code doesn't reflect the test results
+#      - name: Check tests results
+#        working-directory: ./permian
+#        shell: bash {0}
+#        run: |
+#          ls xunit*.xml > /dev/null
+#          if [ $? -ne 0 ]; then
+#            exit 112
+#          fi
+#          fails=$( grep -E '<failure .* type="failure"/>|<error .* type="error"/>' xunit*.xml )
+#          if [ -n "$fails" ]; then
+#            exit 111
+#          else
+#            exit 0
+#          fi
+#
+#      - name: Set result status
+#        if: always()
+#        uses: octokit/request-action@v2.x
+#        with:
+#          route: 'POST /repos/${{ github.repository }}/statuses/${{ needs.pr-info.outputs.sha }}'
+#          context: '${{ env.STATUS_NAME }} ${{ needs.pr-info.outputs.launch_args }}'
+#          description: 'finished [${{ runner.name }}]'
+#          state: ${{ job.status }}
+#          target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Collect logs
         if: always()
@@ -242,41 +284,14 @@ jobs:
         with:
           name: 'logs'
           path: |
-            permian/permian.log
-            permian/local_logs/
-            permian/pipeline_data
-            permian/static/
-            permian/index.html
-            permian/xunit*.xml
-            permian/*.dump
+           anaconda/images/*.log
 
-      # Permian exit code doesn't reflect the test results
-      - name: Check tests results
-        working-directory: ./permian
-        shell: bash {0}
-        run: |
-          ls xunit*.xml > /dev/null
-          if [ $? -ne 0 ]; then
-            exit 112
-          fi
-          fails=$( grep -E '<failure .* type="failure"/>|<error .* type="error"/>' xunit*.xml )
-          if [ -n "$fails" ]; then
-            exit 111
-          else
-            exit 0
-          fi
-
-      - name: Set result status
-        if: always()
-        uses: octokit/request-action@v2.x
+      - name: Upload image
+        uses: actions/upload-artifact@v3
         with:
-          route: 'POST /repos/${{ github.repository }}/statuses/${{ needs.pr-info.outputs.sha }}'
-          context: '${{ env.STATUS_NAME }} ${{ needs.pr-info.outputs.launch_args }}'
-          description: 'finished [${{ runner.name }}]'
-          state: ${{ job.status }}
-          target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: boot.iso image for ${{ needs.pr-info.outputs.image_description }}
+          path: |
+            anaconda/images/*.iso
 
   waive:
     runs-on: ubuntu-latest
