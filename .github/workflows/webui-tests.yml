@@ -72,7 +72,7 @@ jobs:
   run:
     needs: pr-info
     if: needs.pr-info.outputs.allowed_user == 'true' && ! contains(github.event.comment.body, '--waive')
-    runs-on: [self-hosted, kstest]
+    runs-on: [self-hosted, kstest-test]
     timeout-minutes: 65
     env:
       TARGET_BRANCH: ${{ needs.pr-info.outputs.base_ref }}
