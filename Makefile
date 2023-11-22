@@ -30,6 +30,7 @@ APPSTREAMFILE=org.cockpit-project.$(PACKAGE_NAME).metainfo.xml
 TEST_OS=fedora-rawhide-boot
 # common arguments for tar, mostly to make the generated tarballs reproducible
 TAR_ARGS = --sort=name --mtime "@$(shell git show --no-patch --format='%at')" --mode=go=rX,u+rw,a-s --numeric-owner --owner=0 --group=0
+RPM_BUILD_DIR ?= ~/rpmbuild/RPMS
 
 # Anaconda specific variables
 PAYLOAD=fedora-rawhide-anaconda-payload
@@ -140,6 +141,11 @@ srpm: $(TARFILE) $(SPEC)
 	  --define "_sourcedir `pwd`" \
 	  --define "_srcrpmdir `pwd`" \
 	  $(SPEC)
+
+rpms: srpm
+	rpmbuild --rebuild \
+	  --define "_rpmdir $(RPM_BUILD_DIR)" \
+	  anaconda-webui*.src.rpm
 
 EXTRA_DIST = dist src firefox-theme
 
