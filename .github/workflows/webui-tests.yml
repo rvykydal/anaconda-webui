@@ -170,6 +170,12 @@ jobs:
           cp -av ./result/build/01-rpm-build/*.rpm ./anaconda_rpms/
 
       # TODO: Build anaconda-webui RPM files
+      - name: Build Anaconda-webui RPM files
+        working-directory: ./anaconda-webui
+        run: |
+          RPM_BUILD_DIR=anaconda_webui_rpms make rpms
+          cp -av ./anaconda_webui_rpms/noarch/*.rpm ../anaconda/anaconda_rpms/
+
 
       - name: Build anaconda-iso-creator container image
         working-directory: ./anaconda
