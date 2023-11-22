@@ -110,12 +110,20 @@ jobs:
       - name: Clone anaconda repository
         uses: actions/checkout@v4
         with:
+          repository: rhinstaller/anaconda
+          path: anaconda
+          # TODO: parametrize
+          ref: master
+
+      - name: Clone anaconda-webui repository
+        uses: actions/checkout@v4
+        with:
           ref: ${{ needs.pr-info.outputs.sha }}
           fetch-depth: 0
-          path: anaconda
+          path: anaconda-webui
 
       - name: Rebase to current ${{ env.TARGET_BRANCH }}
-        working-directory: ./anaconda
+        working-directory: ./anaconda-webui
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -161,6 +169,8 @@ jobs:
           mkdir -p ./anaconda_rpms/
           cp -av ./result/build/01-rpm-build/*.rpm ./anaconda_rpms/
 
+      # TODO: Build anaconda-webui RPM files
+
       - name: Build anaconda-iso-creator container image
         working-directory: ./anaconda
         run: |
@@ -186,6 +196,7 @@ jobs:
           sudo podman rmi -f $ISO_BUILD_CONTAINER_NAME:$CONTAINER_TAG || true
           sudo podman rmi -f $RPM_BUILD_CONTAINER_NAME:$CONTAINER_TAG || true
 
+      # TODO: anaconda_repo setting
       - name: Create Permian settings file
         working-directory: ./permian
         run: |
