@@ -67,6 +67,7 @@ export const AnacondaWizard = ({ dispatch, storageData, localizationData, runtim
     const [currentStepId, setCurrentStepId] = useState();
     const osRelease = useContext(OsReleaseContext);
     const isBootIso = useContext(SystemTypeContext) === "BOOT_ISO";
+    const selectedDisks = storageData.diskSelection.selectedDisks;
 
     const availableDevices = useMemo(() => {
         return Object.keys(storageData.devices);
@@ -94,7 +95,7 @@ export const AnacondaWizard = ({ dispatch, storageData, localizationData, runtim
          * but for custom mount assignment we try to reuse the partitioning when possible.
          */
         setReusePartitioning(false);
-    }, [availableDevices, storageData.diskSelection.selectedDisks]);
+    }, [availableDevices, selectedDisks]);
 
     const language = useMemo(() => {
         for (const l of Object.keys(localizationData.languages)) {
