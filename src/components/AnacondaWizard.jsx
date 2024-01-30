@@ -42,6 +42,7 @@ import { Accounts, getPageProps as getAccountsProps, getAccountsState, applyAcco
 import { InstallationProgress } from "./installation/InstallationProgress.jsx";
 import { ReviewConfiguration, ReviewConfigurationConfirmModal, getPageProps as getReviewConfigurationProps } from "./review/ReviewConfiguration.jsx";
 import { exitGui } from "../helpers/exit.js";
+import { useMountPointConstraints } from "./storage/Common.jsx";
 import {
     applyStorage,
     resetPartitioning,
@@ -54,6 +55,7 @@ const N_ = cockpit.noop;
 export const AnacondaWizard = ({ dispatch, storageData, localizationData, runtimeData, onCritFail, title, conf }) => {
     const [isFormDisabled, setIsFormDisabled] = useState(false);
     const [isFormValid, setIsFormValid] = useState(false);
+    const mountPointConstraints = useMountPointConstraints();
     const [reusePartitioning, setReusePartitioning] = useState(false);
     const [stepNotification, setStepNotification] = useState();
     const [storageEncryption, setStorageEncryption] = useState(getStorageEncryptionState());
@@ -124,6 +126,7 @@ export const AnacondaWizard = ({ dispatch, storageData, localizationData, runtim
                     diskSelection: storageData.diskSelection,
                     dispatch,
                     partitioningData: storageData.partitioning,
+                    mountPointConstraints,
                     reusePartitioning,
                     setReusePartitioning,
                 },

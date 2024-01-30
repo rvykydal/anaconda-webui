@@ -40,7 +40,6 @@ import { ListingTable } from "cockpit-components-table.jsx";
 import { EmptyStatePanel } from "cockpit-components-empty-state.jsx";
 
 import { EncryptedDevices } from "./EncryptedDevices.jsx";
-import { useMountPointConstraints } from "./Common.jsx";
 
 import {
     setBootloaderDrive,
@@ -612,13 +611,13 @@ export const MountPointMapping = ({
     dispatch,
     idPrefix,
     partitioningData,
+    mountPointConstraints,
     reusePartitioning,
     setIsFormValid,
     setReusePartitioning,
     setStepNotification,
 }) => {
     const [usedPartitioning, setUsedPartitioning] = useState(partitioningData?.path);
-    const mountPointConstraints = useMountPointConstraints(deviceData, diskSelection);
     const [skipUnlock, setSkipUnlock] = useState(false);
     const lockedLUKSDevices = useMemo(
         () => getLockedLUKSDevices(partitioningData?.requests, deviceData),
