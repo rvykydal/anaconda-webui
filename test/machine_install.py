@@ -19,6 +19,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from tempfile import TemporaryDirectory
 
@@ -40,7 +41,7 @@ from machine.testvm import (
 # In the anaconda environment /run/nologin always exists however cockpit test
 # suite expects it to not exist
 os.environ["TEST_ALLOW_NOLOGIN"] = "true"
-
+CREATE_IMAGE = bool(os.environ.get("CREATE_IMAGE"))
 
 class VirtInstallMachine(VirtMachine):
     efi = False
@@ -56,6 +57,13 @@ class VirtInstallMachine(VirtMachine):
                 if not (sock.connect_ex(('127.0.0.1', port)) == 0):
                     return port
             port = port + 1
+
+    def _create_disk_image(self, size, image_path=None, quiet=False):
+        if not image_path:
+            _, image_path = tempfile.mkstemp(suffix='.qcow2', prefix=f"disk-anaconda-{self.label}", dir=self.run_dir)
+        quiet = "-q" if quiet else ""
+        self._execute(f"qemu-img create -f qcow2 {quiet} {image_path} {size}G")
+        return image_path
 
     def _wait_http_server_running(self, port):
         WAIT_HTTP_RUNNING = """
@@ -115,6 +123,11 @@ class VirtInstallMachine(VirtMachine):
 
         self.http_updates_img_port = self._serve_updates_img()
 
+        disk_option = "--disk=none "
+        if CREATE_IMAGE:
+            disk_image = self._create_disk_image(15, quiet=True)
+            disk_option = f"--disk path={disk_image},bus=virtio,cache=unsafe "
+
         iso_path = f"{os.getcwd()}/bots/images/{self.image}"
         extra_args = ""
         if self.is_live():
@@ -159,7 +172,7 @@ class VirtInstallMachine(VirtMachine):
                 f"hostfwd=tcp:{self.web_address}:{self.web_port}-:80 "
                 "-device virtio-net-pci,netdev=hostnet0,id=net0,addr=0x16' "
                 f"--extra-args '{extra_args}' "
-                f"--disk=none "
+                f"{disk_option}"
                 f"--location {location} &"
             )
 
@@ -193,6 +206,11 @@ class VirtInstallMachine(VirtMachine):
             self.http_updates_img_server.kill()
         if self.http_payload_server:
             self.http_payload_server.kill()
+
+    # pylint: disable=arguments-differ  # this fails locally if you have bots checked out
+    def add_disk(self, size=2):
+        image = self._create_disk_image(size)
+        self._execute(f"virt-xml -c qemu:///session {self.label} --update --add-device --disk {image},format=qcow2,size={size}")
 
     # pylint: disable=arguments-differ  # this fails locally if you have bots checked out
     def wait_poweroff(self):
