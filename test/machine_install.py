@@ -124,9 +124,12 @@ class VirtInstallMachine(VirtMachine):
         self.http_updates_img_port = self._serve_updates_img()
 
         disk_option = "--disk=none "
+        disk_option2 = "--disk=none "
         if CREATE_IMAGE:
             disk_image = self._create_disk_image(15, quiet=True)
             disk_option = f"--disk path={disk_image},bus=virtio,cache=unsafe "
+            disk_image2 = self._create_disk_image(15, quiet=True)
+            disk_option2 = f"--disk path={disk_image2},bus=virtio,cache=unsafe "
 
         iso_path = f"{os.getcwd()}/bots/images/{self.image}"
         extra_args = ""
@@ -173,6 +176,7 @@ class VirtInstallMachine(VirtMachine):
                 "-device virtio-net-pci,netdev=hostnet0,id=net0,addr=0x16' "
                 f"--extra-args '{extra_args}' "
                 f"{disk_option}"
+                f"{disk_option2}"
                 f"--location {location} &"
             )
 
