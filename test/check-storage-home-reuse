@@ -270,5 +270,175 @@ class TestStorageHomeReuseFedora(VirtInstallMachineCase):
         s.select_disks([("vda", False), ("vdb", True)])
         s.wait_scenario_visible("home-reuse", True)
 
+#Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+#Units: sectors of 1 * 512 = 512 bytes
+#Sector size (logical/physical): 512 bytes / 512 bytes
+#I/O size (minimum/optimal): 512 bytes / 512 bytes
+#Disklabel type: gpt
+#Disk identifier: DB12B2A4-5E98-4F12-97A2-424EFC6869C1
+#First usable LBA: 34
+#Last usable LBA: 41943006
+#Alternative LBA: 41943039
+#Partition entries starting LBA: 2
+#Allocated partition entries: 128
+#Partition entries ending LBA: 33
+#
+#Device        Start      End  Sectors Type-UUID                            UUID                                 Name                         Attrs
+#/dev/vda1      2048   206847   204800 C12A7328-F81F-11D2-BA4B-00A0C93EC93B FA98D08B-128A-42AB-AB26-1B10D24F18FD EFI system partition         GUID:63
+#/dev/vda2    206848   239615    32768 E3C9E316-0B5C-4DB8-817D-F92DF00215AE E37855A3-07F9-4C2B-909B-EE2D92BC8D39 Microsoft reserved partition GUID:63
+#/dev/vda3    239616 24271408 24031793 EBD0A0A2-B9E5-4433-87C0-68B6B72699C7 9431458E-065F-418F-92F5-30F52A746DC9 Basic data partition
+#/dev/vda4  30367744 31453183  1085440 DE94BBA4-06D1-4D40-A16A-BFD50179D6AC CC7E5418-AF67-472F-9BF4-FAD27A94A082                              RequiredPartition GUID:63
+#
+#
+#Disk /dev/vdb: 15 GiB, 16106127360 bytes, 31457280 sectors
+#Units: sectors of 1 * 512 = 512 bytes
+#Sector size (logical/physical): 512 bytes / 512 bytes
+#I/O size (minimum/optimal): 512 bytes / 512 bytes
+#Disklabel type: gpt
+#Disk identifier: 3728961F-B645-4387-8CFF-5E3245D9FA12
+#First usable LBA: 34
+#Last usable LBA: 31457246
+#Alternative LBA: 31457279
+#Partition entries starting LBA: 2
+#Allocated partition entries: 128
+#Partition entries ending LBA: 33
+#
+#Device       Start      End  Sectors Type-UUID                            UUID                                 Name     Attrs
+#/dev/vdb1     2048     6143     4096 21686148-6449-6E6F-744E-656564454649 0E30A5EB-4D70-4841-B9FD-6194187E39B6 p.legacy
+#/dev/vdb2     6144   210943   204800 C12A7328-F81F-11D2-BA4B-00A0C93EC93B 75A68E29-DB2F-450D-95C3-673F6B3E70F1 p.UEFI
+#/dev/vdb3   210944  2258943  2048000 BC13C2FF-59E6-4262-A352-B275FD6F7172 A64FFA71-0FEE-48AD-AB86-15617AF653F1 p.lxboot
+#/dev/vdb4  2258944 27262942 25003999 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709 D2B7A43E-6B45-4BED-B707-C70D92BFB00B p.lxroot
+
+#[anaconda root@ibm-p8-kvm-03-guest-02 ~]# sgdisk -p /dev/vda
+#Disk /dev/vda: 41943040 sectors, 20.0 GiB
+#Sector size (logical/physical): 512/512 bytes
+#Disk identifier (GUID): DB12B2A4-5E98-4F12-97A2-424EFC6869C1
+#Partition table holds up to 128 entries
+#Main partition table begins at sector 2 and ends at sector 33
+#First usable sector is 34, last usable sector is 41943006
+#Partitions will be aligned on 2048-sector boundaries
+#Total free space is 16588172 sectors (7.9 GiB)
+#
+#Number  Start (sector)    End (sector)  Size       Code  Name
+#   1            2048          206847   100.0 MiB   EF00  EFI system partition
+#   2          206848          239615   16.0 MiB    0C01  Microsoft reserved ...
+#   3          239616        24271408   11.5 GiB    0700  Basic data partition
+#   4        30367744        31453183   530.0 MiB   2700
+#[anaconda root@ibm-p8-kvm-03-guest-02 ~]# sgdisk -p /dev/vdb
+#Disk /dev/vdb: 31457280 sectors, 15.0 GiB
+#Sector size (logical/physical): 512/512 bytes
+#Disk identifier (GUID): 3728961F-B645-4387-8CFF-5E3245D9FA12
+#Partition table holds up to 128 entries
+#Main partition table begins at sector 2 and ends at sector 33
+#First usable sector is 34, last usable sector is 31457246
+#Partitions will be aligned on 2048-sector boundaries
+#Total free space is 4196318 sectors (2.0 GiB)
+#
+#Number  Start (sector)    End (sector)  Size       Code  Name
+#   1            2048            6143   2.0 MiB     EF02  p.legacy
+#   2            6144          210943   100.0 MiB   EF00  p.UEFI
+#   3          210944         2258943   1000.0 MiB  EA00  p.lxboot
+#   4         2258944        27262942   11.9 GiB    8304  p.lxroot
+
+#[anaconda root@ibm-p8-kvm-03-guest-02 ~]# sgdisk --list-types | grep Win
+#2700 Windows RE                          3000 ONIE boot
+#4100 PowerPC PReP boot                   4200 Windows LDM data
+#4201 Windows LDM metadata                4202 Windows Storage Spaces
+#[anaconda root@ibm-p8-kvm-03-guest-02 ~]# sgdisk --list-types | grep Micro
+#0700 Microsoft basic data                0701 Microsoft Storage Replica
+#0702 ArcaOS Type 1                       0c01 Microsoft reserved
+#
+# name
+## sgdisk -c 1:grub /dev/sda
+## sgdisk -t 1:63 /dev/sda
+
+    def move_standard_fedora_disk_to_Win_disk(self, win_disk, fedora_disk):
+        b = self.browser
+        m = self.machine
+        s = Storage(b, m)
+
+        # Windows + Fedora partitioning
+        s.partition_disk(f"/dev/{win_disk}", [
+            # Common
+            ("100MiB", "efi"),
+            # Windows
+            ("128MiB", "ms-reserved"),
+            ("11.5GiB", "ms-basic-data"),
+            # Fedora
+            ("1GiB", "ext4"),
+            ("13GiB", "btrfs"),
+            # Windows
+            ("530MiB", "win-re"),
+        ])
+        boot_part = 4
+        root_part = 5
+
+        # Copy the data from the Fedora to precreated partitios on Windows disk.
+        # TODO Then eject the fedora disk
+        self.machine.execute(f"""
+        set -xe
+
+        # Create btrfs layout
+        mkfs.btrfs -f -L BTRFS /dev/{win_disk}{root_part}
+        mount /dev/{win_disk}{root_part} /mnt
+        btrfs subvolume create /mnt/root
+        btrfs subvolume create /mnt/home
+
+        # Copy data from the first disk / to the new disk
+        mkdir -p /mnt-fedora
+        mount /dev/{fedora_disk}4 /mnt-fedora
+        rsync -pogAXtlHrDx \
+            --stats \
+            --verbose \
+            --progress \
+            --exclude=/dev/* \
+            --exclude=/proc/* \
+            --exclude=/sys/* \
+            --exclude=/tmp/* \
+            --exclude=/run/* \
+            --exclude=/mnt/* \
+            --exclude=/media/* \
+            --exclude=/lost+found \
+            --exclude=/var/lib/machines \
+            --exclude=/var \
+            /mnt-fedora/* /mnt
+
+        #/mnt-fedora/* /mnt
+        # Adjust /etc/fstab to contain the new device UUIDS
+        echo "UUID=$(blkid -s UUID -o value /dev/{win_disk}{root_part}) / btrfs defaults,subvol=root 0 0" > /mnt/root/etc/fstab
+        echo "UUID=$(blkid -s UUID -o value /dev/{win_disk}{root_part}) /home btrfs defaults,subvol=home 0 0" >> /mnt/root/etc/fstab
+        echo "UUID=$(blkid -s UUID -o value /dev/{win_disk}{boot_part}) /boot ext4 defaults 0 0" >> /mnt/root/etc/fstab
+
+        umount /mnt-fedora
+        umount /mnt
+
+        # Do the same for /boot
+        mount /dev/{win_disk}{boot_part} /mnt
+        mount /dev/{fedora_disk}3 /mnt-fedora
+        rsync -aAXHv /mnt-fedora/ /mnt/
+
+        umount /mnt-fedora
+        umount /mnt
+        """, timeout=90)
+
+    def _testNonLinuxSystemSingleDisk_partition_disk(self):
+        self.move_standard_fedora_disk_to_Win_disk("vda", "vdb")
+        # WindowsOS(machine=self.machine).partition_disk()
+
+    @disk_images([("", 35), ("fedora-rawhide", 15)])
+    def testNonLinuxSystemSingleDisk(self):
+        b = self.browser
+        m = self.machine
+        i = Installer(b, m, scenario="home-reuse")
+        s = Storage(b, m)
+
+        pretend_default_scheme(self, "BTRFS")
+
+        i.open()
+        i.reach(i.steps.INSTALLATION_METHOD)
+
+        # Only the Windows disk is selected
+        s.wait_scenario_visible("home-reuse", False)
+
 if __name__ == '__main__':
     test_main()
