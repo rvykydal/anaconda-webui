@@ -51,7 +51,7 @@ import {
 
 import { StorageContext } from "../../contexts/Common.jsx";
 
-import { getNewPartitioning, useMountPointConstraints, useOriginalDevices } from "../../hooks/Storage.jsx";
+import { getNewPartitioning, useFreeSystemMountPointsSpace, useMountPointConstraints, useOriginalDevices } from "../../hooks/Storage.jsx";
 
 import { EmptyStatePanel } from "cockpit-components-empty-state.jsx";
 import { ListingTable } from "cockpit-components-table.jsx";
@@ -111,7 +111,7 @@ const getRequestsValid = (requests, deviceData) => {
         !hasDuplicateFields(requests, "device-spec") &&
         requests.every(checkValidRequest)
     );
-
+    console.log("DDDDD getRequestsValid", isFormValid)
     return isFormValid;
 };
 
@@ -180,6 +180,7 @@ const updatePartitioningRequests = ({ newRequests, partitioning, requests }) => 
         }
     });
 
+    console.log("DDDDD setManualPartitionigRequests");
     return setManualPartitioningRequests({
         partitioning,
         requests: requestsToDbus(backendRequests),
@@ -570,6 +571,7 @@ const RequestsTable = ({
         () => getLockedLUKSDevices(selectedDisks, deviceData),
         [deviceData, selectedDisks]
     );
+    const freeSpace = useFreeSystemMountPointsSpace();
 
     // Add the required mount points to the initial requests
     useEffect(() => {
@@ -610,6 +612,7 @@ const RequestsTable = ({
 
         setIsFormValid(getRequestsValid(newRequests, deviceData));
 
+        console.log("DDDDD updatePartitionigRequests");
         /* Sync newRequests to the backend */
         updatePartitioningRequests({
             newRequests,
@@ -622,6 +625,8 @@ const RequestsTable = ({
 
         setUnappliedRequests(newRequests);
     }, [setIsFormValid, deviceData, unappliedRequests, requests, partitioning.path, setStepNotification]);
+
+    console.log("DDDDDD setUnappliedRequests free space", freeSpace/1024/1024/1024);
 
     if (isLoadingPartitioning || unappliedRequests === undefined) {
         return <EmptyStatePanel loading />;
@@ -744,6 +749,7 @@ const CustomFooter = ({ setStepNotification }) => {
     const devices = useOriginalDevices();
     const step = new Page().id;
     const onNext = ({ goToNextStep, setIsFormDisabled }) => {
+        console.log("DDDDD applyStorage MPA");
         return applyStorage({
             devices,
             onFail: ex => {

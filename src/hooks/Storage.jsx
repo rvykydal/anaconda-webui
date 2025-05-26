@@ -22,6 +22,7 @@ import {
 import {
     getDiskFreeSpace,
     getDiskTotalSpace,
+    getFileSystemFreeSpace,
     getFormatTypeData,
     getMountPointConstraints,
     getRequiredDeviceSize,
@@ -61,6 +62,26 @@ export const useDiskTotalSpace = () => {
     }, [selectedDisks, devices]);
 
     return diskTotalSpace;
+};
+
+export const useFreeSystemMountPointsSpace = () => {
+    const [freeMountPointsSpace, setFreeMountPointsSpace] = useState();
+
+    // TODO make dependent on planned device tree?
+    const devices = useOriginalDevices();
+    const { diskSelection } = useContext(StorageContext);
+    const selectedDisks = diskSelection.selectedDisks;
+
+    useEffect(() => {
+        const update = async () => {
+            const freeMountPointsSpace = await getFileSystemFreeSpace({ mountPoints: ["/", "/usr"] });
+
+            setFreeMountPointsSpace(freeMountPointsSpace);
+        };
+        update();
+    }, [selectedDisks, devices]);
+
+    return freeMountPointsSpace;
 };
 
 export const useDiskFreeSpace = () => {

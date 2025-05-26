@@ -22,7 +22,7 @@ from installer import Installer
 from operating_systems import WindowsOS
 from review import Review
 from storage import Storage
-from testlib import nondestructive, skipImage, test_main  # pylint: disable=import-error
+from testlib import nondestructive, skipImage, test_main, sit  # pylint: disable=import-error
 from utils import move_standard_fedora_disk_to_MBR_disk, pretend_default_scheme, rsync_directory
 
 TEST_DIR = os.path.dirname(__file__)
@@ -167,6 +167,8 @@ class TestStorageHomeReuseFedora(VirtInstallMachineCase):
         i.open()
         i.reach(i.steps.INSTALLATION_METHOD)
         s.select_disks([("vda", True), ("vdb", False)])
+
+        sit()
 
         s.unlock_all_encrypted()
         s.unlock_device("einszwei", ["vda4"], ["vda4"])

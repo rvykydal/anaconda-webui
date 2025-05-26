@@ -22,7 +22,7 @@ from installer import Installer
 from review import Review
 from storage import Storage
 from storagelib import StorageCase  # pylint: disable=import-error
-from testlib import nondestructive, skipImage, test_main  # pylint: disable=import-error
+from testlib import nondestructive, skipImage, test_main, sit  # pylint: disable=import-error
 from utils import move_standard_fedora_disk_to_MBR_disk, pretend_default_scheme
 
 TEST_DIR = os.path.dirname(__file__)
@@ -47,6 +47,7 @@ class TestStorageMountPoints(VirtInstallMachineCase, StorageCase):
 
         i.open()
         i.reach(i.steps.INSTALLATION_METHOD)
+        sit()
 
         s.select_mountpoint([("vda", False), ("vdb", True)])
 
@@ -182,7 +183,7 @@ class TestStorageMountPoints(VirtInstallMachineCase, StorageCase):
 
         # BIOS boot partition, /boot partition, /
         disk1 = "/dev/vda"
-        s.partition_disk(disk1, [("1MiB", "biosboot"), ("1GB", "xfs"), ("", "xfs")])
+        s.partition_disk(disk1, [("1MiB", "biosboot"), ("1GB", "xfs"), ("1GB", "xfs"), ("", "xfs")])
 
         # /dev/vdb1 /home partition
         disk2 = "/dev/vdb"
@@ -202,6 +203,8 @@ class TestStorageMountPoints(VirtInstallMachineCase, StorageCase):
 
         i.open()
         i.reach(i.steps.INSTALLATION_METHOD)
+
+        sit()
 
         # Select only vdb disk and verify that mount point assignment is
         # not available (missing biosboot)
@@ -268,6 +271,7 @@ class TestStorageMountPoints(VirtInstallMachineCase, StorageCase):
 
         i.open()
         i.reach(i.steps.INSTALLATION_METHOD)
+        sit()
 
         s.wait_scenario_available("mount-point-mapping", True)
 
@@ -315,6 +319,8 @@ class TestStorageMountPoints(VirtInstallMachineCase, StorageCase):
 
         i.open()
         i.reach(i.steps.INSTALLATION_METHOD)
+
+        sit()
 
         s.unlock_all_encrypted()
         s.unlock_device("1234", ["vda2", "vda3", "vda4"], [])

@@ -37,11 +37,13 @@ import {
 } from "../../contexts/Common.jsx";
 
 import {
+    useFreeSystemMountPointsSpace,
     useOriginalDevices,
     useOriginalExistingSystems,
     usePlannedActions,
     usePlannedDevices,
     usePlannedMountPoints,
+    useRequiredSize,
 } from "../../hooks/Storage.jsx";
 
 import { ListingTable } from "cockpit-components-table.jsx";
@@ -337,7 +339,18 @@ const AffectedSystems = ({ type }) => {
 export const StorageReviewNote = () => {
     const originalExistingSystems = useOriginalExistingSystems();
     const plannedActions = usePlannedActions();
+    const freeSpace = useFreeSystemMountPointsSpace();
+    const requiredSize = useRequiredSize();
 
+    console.log("DDDDDD setUnappliedRequests free space", freeSpace/1024/1024/1024);
+    if  (requiredSize > freeSpace) {
+        const msg = cockpit.format(
+            _("Not enough free space on assigned mount points. Required: $0 Available: $1."),
+            cockpit.format_bytes(requiredSize),
+            cockpit.format_bytes(freeSpace)
+        );
+        console.log(msg);
+    }
     const hasNote = (
         originalExistingSystems.filter(
             system => system.devices.v.some(device => (
