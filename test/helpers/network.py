@@ -216,3 +216,23 @@ class Network():
         n.check_con_settings([
             [con_name, "connection.autoconnect", "yes", None]
         ])
+
+    def configure_iface_setting(self, setting_title):
+        b = self.browser
+        b.click(f"dt:contains('{setting_title}') + dd button")
+
+    def wait_for_iface_setting(self, setting_title, setting_value):
+        b = self.browser
+        b.wait_in_text(f"dt:contains('{setting_title}') + dd", setting_value)
+
+    def set_mtu(self, mtu):
+        b = self.browser
+        self.configure_iface_setting("MTU")
+        b.wait_visible("#network-mtu-settings-dialog")
+        # wait until dialog initialized
+        b.wait_visible("#network-mtu-settings-dialog button[aria-label=Close]")
+        b.wait_visible("#network-mtu-settings-custom")
+        b.set_checked('#network-mtu-settings-custom', val=True)
+        b.set_input_text('#network-mtu-settings-input', mtu)
+        b.click("#network-mtu-settings-save")
+        b.wait_not_present("#network-mtu-settings-dialog")

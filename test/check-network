@@ -76,6 +76,34 @@ class TestNetwork(VirtInstallMachineCase):
         # Check there is only single persistent profile
         n.check_con_profile_files("", 1, root=SYSROOT_PATH)
 
+    def testConfiguration(self):
+        """
+        Description:
+            Test that it is possible to configure a device.
+
+            Tested configuration: MTU, additional DNS server
+
+        Expected results:
+            - The configured values are correctly applied to connection profile and device.
+        """
+        b = self.browser
+        m = self.machine
+        i = Installer(b, m)
+        n = Network(b, m)
+
+        i.open()
+
+        iface = n.get_the_iface()
+        def_con_name = WIRED_CONNECTION_NAME
+        n.enter_network()
+        n.select_iface(iface)
+        mtu_value = "1600"
+        n.set_mtu(mtu_value)
+        n.wait_for_iface_setting("MTU", mtu_value)
+        n.check_con_settings([
+            [def_con_name, "802-3-ethernet.mtu", mtu_value, None],
+        ])
+
     @nondestructive
     def testCockpitJsErrorHandling(self):
         """
