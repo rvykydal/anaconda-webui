@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; If not, see <http://www.gnu.org/licenses/>.
 
+import time
+
 from anacondalib import VirtInstallMachineCase
 from installer import Installer
 from network import SYSROOT_PATH, WIRED_CONNECTION_NAME, Network
 from progress import Progress
-from testlib import nondestructive, test_main  # pylint: disable=import-error
+from testlib import sit, nondestructive, test_main  # pylint: disable=import-error
 from utils import check_cockpit_module_js_error
 
 
@@ -76,7 +78,7 @@ class TestNetwork(VirtInstallMachineCase):
         # Check there is only single persistent profile
         n.check_con_profile_files("", 1, root=SYSROOT_PATH)
 
-    def testConfiguration(self):
+    def testConfigurationPreInstall(self):
         """
         Description:
             Test that it is possible to configure a device.
@@ -95,14 +97,36 @@ class TestNetwork(VirtInstallMachineCase):
 
         iface = n.get_the_iface()
         def_con_name = WIRED_CONNECTION_NAME
-        n.enter_network()
-        n.select_iface(iface)
+
         mtu_value = "1600"
-        n.set_mtu(mtu_value)
-        n.wait_for_iface_setting("MTU", mtu_value)
+        n.set_mtu_on_iface(iface, mtu_value)
+
         n.check_con_settings([
             [def_con_name, "802-3-ethernet.mtu", mtu_value, None],
         ])
+
+        # Check that the checkpoint does not fail silently
+        time.sleep(10)
+
+        n.check_con_settings([
+            [def_con_name, "802-3-ethernet.mtu", mtu_value, None],
+        ])
+        sit()
+
+        #dns_server = "8.8.8.8"
+        #n.add_dns_server_to_iface(iface, dns_server)
+
+        #n.check_con_settings([
+        #    [def_con_name, "ipv4.dns", dns_server, None],
+        #])
+
+        ## Check that the checkpoint does not fail silently
+        #time.sleep(10)
+
+        #n.check_con_settings([
+        #    [def_con_name, "ipv4.dns", dns_server, None],
+        #])
+        #sit()
 
     @nondestructive
     def testCockpitJsErrorHandling(self):

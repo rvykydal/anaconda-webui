@@ -225,6 +225,14 @@ class Network():
         b = self.browser
         b.wait_in_text(f"dt:contains('{setting_title}') + dd", setting_value)
 
+    def set_mtu_on_iface(self, iface, mtu):
+        n = self
+        n.enter_network()
+        n.select_iface(iface)
+        n.set_mtu(mtu)
+        n.wait_for_iface_setting("MTU", mtu)
+        n.exit_network()
+
     def set_mtu(self, mtu):
         b = self.browser
         self.configure_iface_setting("MTU")
@@ -236,3 +244,30 @@ class Network():
         b.set_input_text('#network-mtu-settings-input', mtu)
         b.click("#network-mtu-settings-save")
         b.wait_not_present("#network-mtu-settings-dialog")
+
+    # TODORV share
+    def wait_onoff(self, sel: str, *, val: bool) -> None:
+        self.browser.wait_visible(sel + " input[type=checkbox]" + (":checked" if val else ":not(:checked)"))
+
+    def toggle_onoff(self, sel: str) -> None:
+        self.browser.click(sel + " input[type=checkbox]")
+
+    def add_dns_server_to_iface(self, iface, ip):
+        n = self
+        n.enter_network()
+        n.select_iface(iface)
+        n.add_dns_server(ip)
+        # TODORV wait for it or wait for value
+        n.exit_network()
+
+    def add_dns_server(self, ip):
+        b = self.browser
+        self.configure_iface_setting('IPv4')
+        b.wait_visible("#network-ip-settings-dialog")
+        self.wait_onoff("[data-field=dns]", val=True)
+        self.toggle_onoff("[data-field=dns]")
+        self.wait_onoff("[data-field=dns_search]", val=False)
+        b.click("#network-ip-settings-dns-add")
+        b.set_input_text("#network-ip-settings-dns-server-0", ip)
+        b.click("#network-ip-settings-save")
+        b.wait_not_present("#network-ip-settings-dialog")
