@@ -10,7 +10,7 @@ from bugzilla_mock import (
     uninstall_mock_bugzilla,
 )
 from installer import Installer
-from testlib import nondestructive, test_main  # pylint: disable=import-error
+from testlib import sit, nondestructive, test_main  # pylint: disable=import-error
 from utils import get_pretty_name
 
 
@@ -30,6 +30,7 @@ class TestBasic(VirtInstallMachineCase):
         i = Installer(b, m)
 
         i.open()
+        sit()
 
         self.assertIn(
             b.attr("#app .pf-v6-c-page", "data-debug").lower(),
